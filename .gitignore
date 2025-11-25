@@ -3,3 +3,4 @@ output/
 venv/
 results/
 uploads/
+__pycache__/

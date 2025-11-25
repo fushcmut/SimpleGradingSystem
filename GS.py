@@ -96,7 +96,7 @@ class File(Input):
         except FileNotFoundError:
             raise FileNotFoundError(f"File not found at path: {self.path}")
         except Exception as e:
-            raise Exception(f"Error when reading file: {e}")
+            raise Exception(f"{e}")
 
 
     def preprocess(self) -> list[int, str]:
@@ -329,8 +329,6 @@ def to_statistic_file(
             plt.savefig(img_path, dpi=150, bbox_inches='tight')
             # print(f"Figure saved to {img_path}")
             plt.close()
-        else:
-            plt.show()
 
     return wrong_percent
 
