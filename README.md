@@ -1,4 +1,4 @@
-# Automated Grading System (PGS)
+# Automated Grading System (AGS)
 A minimalist web application built with Flask and Python that automatically grades multiple-choice answer files based on a teacher’s key. It supports multiple input data formats (Mode 1, 2, 3) and generates detailed score reports along with mistake-statistics plots.
 
 ---
@@ -17,11 +17,13 @@ Ensure the following items are in the same directory: `app.py`, `GS.py`, `requir
 Create the venv: 
 ```
 python -m venv venv
-```  
+```
+
 Windows: 
 ```
 venv\Scripts\activate
-```  
+```
+
 macOS/Linux: 
 ```
 source venv/bin/activate
