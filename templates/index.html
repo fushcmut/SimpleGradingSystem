@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automated Grading System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f7fafc; }
+        .card { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen flex items-start justify-center">
+
+    <div class="w-full max-w-3xl bg-white p-6 md:p-10 rounded-xl card mt-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-2">
+            Project Grading System (PGS)
+        </h1>
+        <p class="text-gray-600 mb-6">
+            Automated Multiple-Choice Grading System.
+        </p>
+
+        <!-- KHU VỰC THÔNG BÁO LỖI VÀ THÀNH CÔNG -->
+        {% if error_message %}
+            <div role="alert" class="p-4 mb-4 bg-red-100 text-red-700 rounded-lg border border-red-400">
+                <p class="font-semibold">⚠️ Processing Error:</p>
+                <p>{{ error_message }}</p>
+            </div>
+        {% elif success %}
+            <div role="alert" class="p-4 mb-6 bg-green-100 text-green-700 rounded-lg border border-green-400">
+                <p class="font-semibold text-lg">✅ Grading Successful!</p>
+                <p>Successfully processed {{ num_students }} student answers.</p>
+                
+                <!-- HIỂN THỊ CẢNH BÁO NẾU CÓ -->
+                {% if warnings %}
+                    <div class="mt-4 p-3 bg-yellow-100 text-yellow-800 rounded-md border border-yellow-300 max-h-60 overflow-y-auto">
+                        <p class="font-bold mb-2">⚠️ DATA ADJUSTMENT WARNINGS:</p>
+                        <ul class="list-disc list-inside text-sm space-y-1">
+                            {% for warning_group in warnings %}
+                                <li>
+                                    <span class="font-semibold text-gray-700">File: {{ warning_group.file }}</span>
+                                    <ul class="list-none ml-4">
+                                        {# warning_group.warnings là list các tuple (q_num, desc) #}
+                                        {% for q_num, desc in warning_group.warnings %}
+                                            <li class="text-xs">
+                                                - Q{{ q_num }}: {{ desc }}
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        <p class="text-xs mt-2 italic">The system automatically adjusted these errors to proceed with grading.</p>
+                    </div>
+                {% endif %}
+
+                <!-- LIÊN KẾT TẢI XUỐNG -->
+                <div class="mt-4 space-y-2">
+                    <a href="{{ url_for('download_file', filename=score_file) }}" 
+                       class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out">
+                        Download Score File (CSV)
+                    </a>
+                    <a href="{{ url_for('download_file', filename=stat_txt) }}" 
+                       class="inline-flex items-center px-4 py-2 border border-green-600 text-sm font-medium rounded-md text-green-700 bg-white hover:bg-green-50 transition duration-150 ease-in-out">
+                        Download Statistics (TXT)
+                    </a>
+                    <a href="{{ url_for('download_file', filename=stat_img) }}" 
+                       class="inline-flex items-center px-4 py-2 border border-green-600 text-sm font-medium rounded-md text-green-700 bg-white hover:bg-green-50 transition duration-150 ease-in-out">
+                        Download Mistake Plot (PNG)
+                    </a>
+                </div>
+                <p class="mt-4 text-sm text-gray-500">
+                    <a href="{{ url_for('index') }}" class="text-blue-600 hover:underline">Click here to grade a new batch of files.</a>
+                </p>
+            </div>
+        {% endif %}
+
+        <!-- FORM CHÍNH -->
+        <form method="POST" enctype="multipart/form-data" action="{{ url_for('grade_project') }}" class="space-y-6">
+            
+            <!-- 1. KHU VỰC UPLOAD FILE -->
+            <div class="p-5 border border-gray-200 rounded-lg bg-gray-50">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">1. File Upload</h3>
+                
+                <label for="teacher_file" class="block text-sm font-medium text-gray-700 mb-1">
+                    Teacher's Answer Key <span class="text-red-500">*</span>
+                </label>
+                <input type="file" name="teacher_file" id="teacher_file" 
+                       accept=".txt,.csv,.xlsx" required 
+                       class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-white focus:outline-none p-2.5">
+                <p class="mt-2 text-xs text-gray-500">Accepts only one file (.txt, .csv, .xlsx).</p>
+
+                <div class="mt-4">
+                    <label for="student_files" class="block text-sm font-medium text-gray-700 mb-1">
+                        Students' Answer Files <span class="text-red-500">*</span>
+                    </label>
+                    <input type="file" name="student_files" id="student_files" 
+                           accept=".txt,.csv,.xlsx" multiple required 
+                           class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-white focus:outline-none p-2.5">
+                    <p class="mt-2 text-xs text-gray-500">Accepts multiple files at once.</p>
+                </div>
+            </div>
+
+            <!-- 2. KHU VỰC CẤU HÌNH -->
+            <div class="p-5 border border-gray-200 rounded-lg bg-gray-50">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">2. Processing Configuration</h3>
+                
+                <div class="mb-4">
+                    <label for="mode" class="block text-sm font-medium text-gray-700 mb-1">
+                        Select Input Data Mode:
+                    </label>
+                    <select name="mode" id="mode" required 
+                            class="block w-full p-2 border border-gray-300 rounded-lg bg-white focus:ring-blue-500 focus:border-blue-500">
+                        <option value="1">Mode 1: Answer Only</option>
+                        <option value="2">Mode 2: Question No. + Separator + Answer</option>
+                        <option value="3">Mode 3: Question No. + Answer (No Separator)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="penalty" class="block text-sm font-medium text-gray-700 mb-1">
+                        Penalty Weight (0.0 - 1.0):
+                    </label>
+                    <input type="number" name="penalty" id="penalty" step="0.01" min="0" max="1" value="0.1" required
+                           class="block w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    <p class="mt-2 text-xs text-gray-500">Example: 0.1 means each wrong answer subtracts 10% of that question's weight.</p>
+                </div>
+            </div>
+
+            <!-- NÚT XỬ LÝ CHÍNH -->
+            <button type="submit" 
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                Grade and Generate Report
+            </button>
+        </form>
+
+    </div>
+</body>
+</html>
