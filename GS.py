@@ -149,9 +149,9 @@ class File(Input):
                     (int(q), "Duplicate answers found.")
                 )
 
-                # Thay bằng _ và cho drop hết những thằng còn lại
+                # Thay bằng - và cho drop hết những thằng còn lại
                 mask = df['Q_num'] == q
-                df.loc[mask, 'Answer'] = "_"
+                df.loc[mask, 'Answer'] = "-"
 
                 drop_idx = df[mask].index[1:]
                 df = df.drop(index=drop_idx)
@@ -252,17 +252,23 @@ def students_input(
 
     return np.vstack(normalized, dtype='str'), all_warnings
 
-def check_answer(correct_answer : np.array, students_answer : np.array) -> np.array:
+def check_answer(correct_answer : np.array, student_answers : np.array) -> np.array:
     correct_answer = correct_answer.reshape(1, -1)
-    result = (students_answer == correct_answer) & (students_answer != "_")
+
+    skipped_mask = (student_answers == "_")
+    result = (student_answers == correct_answer) & (~skipped_mask)
     return result
 
-def to_score_file(result : np.array, penalty : float = 0):
+def to_score_file(result : np.array, students_answer : np.array, penalty : float = 0):
     result = np.array(result, dtype=bool)
     total_questions = result.shape[1]
 
     correct_count = result.sum(axis=1)
-    wrong_count = total_questions - correct_count
+    
+    skipped_mask = (students_answer == "_")
+    skipped_count = skipped_mask.sum(axis=1)
+
+    wrong_count = total_questions - correct_count - skipped_count
 
     scores = (correct_count / total_questions) - (wrong_count * penalty / total_questions)
 

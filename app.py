@@ -122,7 +122,7 @@ def grade_project():
         results = check_answer(teacher_answer, students_answers) 
 
         # Calculate scores
-        scores = to_score_file(results, penalty=penalty)  
+        scores = to_score_file(results, students_answer=students_answers, penalty=penalty)  
 
         # --- 6. GENERATE OUTPUT FILES ---
         output_txt_path = os.path.join(app.config['RESULT_FOLDER'], "statistics.txt")
