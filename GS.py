@@ -3,12 +3,10 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import tkinter as tk
 from tkinter import filedialog
 from abc import ABC, abstractmethod
 from typing import Any, Tuple, Optional
 import subprocess
-import time
 
 def wrapper(func):
     def inner(*args, **kwargs):
@@ -166,7 +164,7 @@ class File(Input):
             missing = sorted(expected - existing)
 
             for q in missing:
-                warnings.append((q, "Missing question auto-filled '_'"))
+                warnings.append((q, "Missing question auto-filled '_' and will be skipped."))
 
             if missing:
                 missing_rows = pd.DataFrame({
@@ -278,6 +276,7 @@ def to_score_file(result : np.array, students_answer : np.array, penalty : float
 
 def to_statistic_file(
     results : np.array,
+    scores : np.array,
     round_number : int = 1,
     to_txtfile: bool = True,
     output_path: Optional[str] = None,
@@ -302,6 +301,15 @@ def to_statistic_file(
             if os.path.isdir(output_path):
                 save_path = os.path.join(output_path, "statistics.txt")
         with open(save_path, "w", encoding="utf-8") as f:
+            f.write("="*30 + " OVERALL SCORE STATISTICS " + "="*30 + "\n")
+            f.write(f"Total Students Graded: {S}\n")
+            f.write(f"Total Questions: {Q}\n")
+            f.write(f"Average Score (Mean): {np.mean(scores):.2f}/10\n")
+            f.write(f"Median Score: {np.median(scores):.2f}/10\n")
+            f.write(f"Standard Deviation: {np.std(scores):.2f}\n")
+            f.write(f"Highest Score (Max): {np.max(scores):.2f}/10\n")
+            f.write(f"Lowest Score (Min): {np.min(scores):.2f}/10\n")
+            f.write("\n" + "="*30 + " QUESTION MISTAKE ANALYSIS " + "="*30 + "\n")
             for q, pct in wrong_percent.items():
                 f.write(f"Question {q:3}: {pct:6.2f}% students answer incorrectly.\n")
         # print(f"Statistics saved to {save_path}")
@@ -324,7 +332,7 @@ def to_statistic_file(
         for i, pct in enumerate(percents):
             plt.text(
                 questions[i], pct + 1,
-                f"{pct:.1f}%", ha='center', va='bottom', fontsize=8
+                f"{pct:.1f}%", ha='center', va='bottom', fontsize=6
             )
 
         # Save or show
@@ -339,6 +347,7 @@ def to_statistic_file(
     return wrong_percent
 
 def get_user_path() -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
+    import tkinter as tk
     root = tk.Tk()
     root.withdraw()  # ẩn window chính
 
@@ -370,7 +379,7 @@ def get_user_path() -> Tuple[Optional[str], Optional[str], Optional[str], Option
 # ------------------------------------------------
 
 def main():
-    
+    import time
     # Random test
     os.system("cls")
     subprocess.run(["python", "generate.py"])

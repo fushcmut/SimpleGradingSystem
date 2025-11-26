@@ -130,6 +130,7 @@ def grade_project():
         
         to_statistic_file(
             results=results,
+            scores=scores,
             round_number=2,
             to_txtfile=True,
             output_path=output_txt_path,
