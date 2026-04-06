@@ -390,8 +390,8 @@ def main():
     dir = os.getcwd()
     student_folder = os.path.join(dir, "input\\")
     teacher_file = os.path.join(dir, "input\\teacher.txt")
-    output_txt = os.path.join(dir, "output\\score.txt")
-    output_img = os.path.join(dir, "output\\statistic.png")
+    output_txt = os.path.join(dir, "results\\score.txt")
+    output_img = os.path.join(dir, "results\\statistic.png")
     
 
     print("-"*50)
@@ -421,13 +421,14 @@ def main():
     print(warning1, warning2, sep="\n\n")
 
     # ----------------- Tính điểm -----------------
-    scores = to_score_file(results, penalty=0.1)  # ví dụ penalty 0.1
+    scores = to_score_file(results, students_answers, penalty=0.1)  # ví dụ penalty 0.1
     # for i, score in enumerate(scores):
     #     print(f"{os.path.basename(student_files[i]):<20} Score: {score:>6.2f}")
 
     # ----------------- Thống kê -----------------
     to_statistic_file(
         results=results,
+        scores=scores,
         round_number=1,
         to_txtfile=bool(output_txt),
         output_path=output_txt,

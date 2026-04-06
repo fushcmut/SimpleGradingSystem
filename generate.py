@@ -10,8 +10,8 @@ option = {
 }
 
 
-NUM_QUESTIONS = 30
-NUM_STUDENTS = 5
+NUM_QUESTIONS = 40
+NUM_STUDENTS = 600
 DIR = os.path.join(os.getcwd(), "input")
 
 try:
